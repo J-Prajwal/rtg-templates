@@ -1,0 +1,130 @@
+import { TemplateRegistry, TemplateConfig } from '../types';
+
+// Built-in template registry
+const BUILTIN_TEMPLATES: Record<string, TemplateConfig> = {
+  react: {
+    name: 'react',
+    description: 'React application with Vite',
+    repository: 'vitejs/vite/packages/create-vite/template-react',
+    frameworks: ['React', 'Vite'],
+    addons: ['typescript', 'tailwind'],
+    postInstall: {
+      dependencies: ['react', 'react-dom'],
+      devDependencies: ['@vitejs/plugin-react', 'vite'],
+      instructions: 'Run `npm run dev` to start the development server.',
+    },
+  },
+  'react-ts': {
+    name: 'react-ts',
+    description: 'React application with TypeScript and Vite',
+    repository: 'vitejs/vite/packages/create-vite/template-react-ts',
+    frameworks: ['React', 'Vite', 'TypeScript'],
+    addons: ['tailwind', 'auth'],
+    postInstall: {
+      dependencies: ['react', 'react-dom'],
+      devDependencies: ['@vitejs/plugin-react', 'vite', 'typescript', '@types/react', '@types/react-dom'],
+      instructions: 'Run `npm run dev` to start the development server.',
+    },
+  },
+  next: {
+    name: 'next',
+    description: 'Next.js application with React',
+    repository: 'vercel/next.js/examples/hello-world',
+    frameworks: ['Next.js', 'React'],
+    addons: ['typescript', 'tailwind', 'auth'],
+    postInstall: {
+      dependencies: ['next', 'react', 'react-dom'],
+      instructions: 'Run `npm run dev` to start the development server on http://localhost:3000',
+    },
+  },
+  'node-api': {
+    name: 'node-api',
+    description: 'Node.js API with Express',
+    repository: 'get-template-org/node-api-starter',
+    frameworks: ['Node.js', 'Express'],
+    addons: ['typescript', 'mongodb', 'mysql', 'postgres', 'auth'],
+    postInstall: {
+      dependencies: ['express', 'cors', 'helmet', 'dotenv'],
+      devDependencies: ['nodemon'],
+      envTemplate: 'PORT=3000\nNODE_ENV=development\n',
+      instructions: 'Run `npm run dev` to start the development server.',
+    },
+  },
+  fastapi: {
+    name: 'fastapi',
+    description: 'FastAPI Python application',
+    repository: 'get-template-org/fastapi-starter',
+    frameworks: ['FastAPI', 'Python'],
+    addons: ['mysql', 'postgres', 'auth'],
+    postInstall: {
+      scripts: ['pip install -r requirements.txt'],
+      envTemplate: 'DATABASE_URL=sqlite:///./app.db\nSECRET_KEY=your-secret-key-here\n',
+      instructions: 'Run `uvicorn main:app --reload` to start the development server.',
+    },
+  },
+  nestjs: {
+    name: 'nestjs',
+    description: 'NestJS application with TypeScript',
+    repository: 'nestjs/typescript-starter',
+    frameworks: ['NestJS', 'TypeScript'],
+    addons: ['prisma', 'postgres', 'mysql', 'auth'],
+    postInstall: {
+      dependencies: ['@nestjs/core', '@nestjs/common', '@nestjs/platform-express'],
+      devDependencies: ['typescript', '@nestjs/cli'],
+      instructions: 'Run `npm run start:dev` to start the development server.',
+    },
+  },
+};
+
+const DEFAULT_REGISTRY: TemplateRegistry = {
+  version: '1.0.0',
+  templates: BUILTIN_TEMPLATES,
+};
+
+// Cache for external registries
+let cachedRegistry: TemplateRegistry | null = null;
+
+export async function getTemplateRegistry(registryUrl?: string): Promise<TemplateRegistry> {
+  if (cachedRegistry && !registryUrl) {
+    return cachedRegistry;
+  }
+
+  if (registryUrl) {
+    // Load external registry (for future extension)
+    try {
+      const response = await fetch(registryUrl);
+      const externalRegistry = await response.json() as TemplateRegistry;
+      
+      // Validate external registry structure
+      if (!externalRegistry || typeof externalRegistry !== 'object' || !externalRegistry.templates) {
+        throw new Error('Invalid registry format');
+      }
+      
+      // Merge with builtin templates
+      const mergedRegistry: TemplateRegistry = {
+        version: externalRegistry.version || '1.0.0',
+        templates: {
+          ...BUILTIN_TEMPLATES,
+          ...externalRegistry.templates,
+        },
+      };
+
+      cachedRegistry = mergedRegistry;
+      return mergedRegistry;
+    } catch (error) {
+      console.warn('Failed to load external registry, using builtin templates');
+      return DEFAULT_REGISTRY;
+    }
+  }
+
+  cachedRegistry = DEFAULT_REGISTRY;
+  return DEFAULT_REGISTRY;
+}
+
+export function getTemplateConfig(templateName: string, registry: TemplateRegistry): TemplateConfig | null {
+  return registry.templates[templateName] || null;
+}
+
+export function listAvailableTemplates(registry: TemplateRegistry): string[] {
+  return Object.keys(registry.templates);
+} 
