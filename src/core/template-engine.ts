@@ -19,6 +19,19 @@ export class TemplateEngine {
       throw new Error(`No repository specified for template "${this.config.name}"`);
     }
 
+    // Handle local templates
+    if (repository.startsWith('local:')) {
+      const localPath = repository.replace('local:', '');
+      const templatePath = path.resolve(process.cwd(), localPath);
+      
+      if (!await fs.pathExists(templatePath)) {
+        throw new Error(`Local template not found: ${templatePath}`);
+      }
+      
+      await fs.copy(templatePath, targetPath);
+      return;
+    }
+
     // Use degit to clone the template
     const emitter = degit(repository, {
       cache: false,
@@ -76,9 +89,15 @@ export class TemplateEngine {
 
       if (options.tailwind) {
         packageJson.devDependencies = packageJson.devDependencies || {};
-        packageJson.devDependencies.tailwindcss = '^3.0.0';
-        packageJson.devDependencies.postcss = '^8.0.0';
-        packageJson.devDependencies.autoprefixer = '^10.0.0';
+        packageJson.devDependencies.tailwindcss = '^3.4.0';
+        packageJson.devDependencies.postcss = '^8.4.0';
+        packageJson.devDependencies.autoprefixer = '^10.4.0';
+      }
+
+      if (options.reduxToolkit) {
+        packageJson.dependencies = packageJson.dependencies || {};
+        packageJson.dependencies['@reduxjs/toolkit'] = '^2.0.0';
+        packageJson.dependencies['react-redux'] = '^9.0.0';
       }
 
       await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
@@ -139,12 +158,40 @@ export class TemplateEngine {
     return str.replace(/\b\w/g, l => l.toUpperCase()).replace(/[-_]/g, ' ');
   }
 
+  private async hasTypeScriptFiles(targetPath: string): Promise<boolean> {
+    const files = await this.getAllFiles(targetPath);
+    return files.some(file => file.endsWith('.ts') || file.endsWith('.tsx'));
+  }
+
   private async handleConditionalFiles(targetPath: string, options: any): Promise<void> {
-    // Remove TypeScript config if TypeScript is not selected
-    if (!options.typescript) {
-      const tsConfigPath = path.join(targetPath, 'tsconfig.json');
-      if (await fs.pathExists(tsConfigPath)) {
-        await fs.remove(tsConfigPath);
+    // Check if template already has TypeScript files
+    const hasTypeScriptFiles = await this.hasTypeScriptFiles(targetPath);
+    const shouldUseTypeScript = options.typescript || hasTypeScriptFiles;
+    
+    // Handle TypeScript configuration
+    if (shouldUseTypeScript) {
+      // Ensure TypeScript files are preserved
+      // No conversion needed when TypeScript is selected
+    } else {
+      // Remove TypeScript config if TypeScript is not selected
+      const tsConfigFiles = ['tsconfig.json', 'tsconfig.node.json'];
+      for (const tsConfigFile of tsConfigFiles) {
+        const tsConfigPath = path.join(targetPath, tsConfigFile);
+        if (await fs.pathExists(tsConfigPath)) {
+          await fs.remove(tsConfigPath);
+        }
+      }
+      
+      // Convert TypeScript files to JavaScript
+      const tsFiles = await this.getAllFiles(targetPath);
+      for (const filePath of tsFiles) {
+        if (filePath.endsWith('.tsx')) {
+          const newPath = filePath.replace('.tsx', '.jsx');
+          await fs.move(filePath, newPath);
+        } else if (filePath.endsWith('.ts') && !filePath.endsWith('.d.ts')) {
+          const newPath = filePath.replace('.ts', '.js');
+          await fs.move(filePath, newPath);
+        }
       }
     }
 
@@ -154,7 +201,147 @@ export class TemplateEngine {
       if (await fs.pathExists(tailwindConfigPath)) {
         await fs.remove(tailwindConfigPath);
       }
+      
+      // Also remove Tailwind CSS imports from main CSS file
+      const cssFiles = ['src/index.css', 'src/App.css', 'src/styles/globals.css'];
+      for (const cssFile of cssFiles) {
+        const cssPath = path.join(targetPath, cssFile);
+        if (await fs.pathExists(cssPath)) {
+          let content = await fs.readFile(cssPath, 'utf8');
+          content = content.replace(/@tailwind\s+[^;]+;/g, '');
+          content = content.replace(/@import\s+['"]tailwindcss[^'"]*['"];?/g, '');
+          await fs.writeFile(cssPath, content);
+        }
+      }
     }
+
+    // Remove Redux files if Redux Toolkit is not selected
+    if (!options.reduxToolkit) {
+      const reduxFiles = [
+        'src/store/index.js',
+        'src/store/index.ts',
+        'src/store/store.js',
+        'src/store/store.ts',
+        'src/features',
+        'src/redux'
+      ];
+      
+      for (const reduxFile of reduxFiles) {
+        const reduxPath = path.join(targetPath, reduxFile);
+        if (await fs.pathExists(reduxPath)) {
+          await fs.remove(reduxPath);
+        }
+      }
+    } else {
+      // Setup Redux Toolkit if selected
+      await this.setupReduxToolkit(targetPath, shouldUseTypeScript);
+    }
+  }
+
+  private async setupReduxToolkit(targetPath: string, isTypeScript: boolean): Promise<void> {
+    const ext = isTypeScript ? 'ts' : 'js';
+    
+    // Create store directory
+    const storeDir = path.join(targetPath, 'src', 'store');
+    await fs.ensureDir(storeDir);
+    
+    // Create store configuration
+    const storeContent = isTypeScript 
+      ? `import { configureStore } from '@reduxjs/toolkit'
+
+export const store = configureStore({
+  reducer: {
+    // Add your reducers here
+  },
+})
+
+export type RootState = ReturnType<typeof store.getState>
+export type AppDispatch = typeof store.dispatch`
+      : `import { configureStore } from '@reduxjs/toolkit'
+
+export const store = configureStore({
+  reducer: {
+    // Add your reducers here
+  },
+})`;
+
+    await fs.writeFile(path.join(storeDir, `index.${ext}`), storeContent);
+    
+    // Create features directory
+    const featuresDir = path.join(targetPath, 'src', 'features');
+    await fs.ensureDir(featuresDir);
+    
+    // Create example slice
+    const sliceContent = isTypeScript
+      ? `import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+
+interface CounterState {
+  value: number
+}
+
+const initialState: CounterState = {
+  value: 0,
+}
+
+export const counterSlice = createSlice({
+  name: 'counter',
+  initialState,
+  reducers: {
+    increment: (state) => {
+      state.value += 1
+    },
+    decrement: (state) => {
+      state.value -= 1
+    },
+    incrementByAmount: (state, action: PayloadAction<number>) => {
+      state.value += action.payload
+    },
+  },
+})
+
+export const { increment, decrement, incrementByAmount } = counterSlice.actions
+export default counterSlice.reducer`
+      : `import { createSlice } from '@reduxjs/toolkit'
+
+const initialState = {
+  value: 0,
+}
+
+export const counterSlice = createSlice({
+  name: 'counter',
+  initialState,
+  reducers: {
+    increment: (state) => {
+      state.value += 1
+    },
+    decrement: (state) => {
+      state.value -= 1
+    },
+    incrementByAmount: (state, action) => {
+      state.value += action.payload
+    },
+  },
+})
+
+export const { increment, decrement, incrementByAmount } = counterSlice.actions
+export default counterSlice.reducer`;
+
+    await fs.writeFile(path.join(featuresDir, `counterSlice.${ext}`), sliceContent);
+    
+    // Create hooks file
+    const hooksContent = isTypeScript
+      ? `import { useDispatch, useSelector } from 'react-redux'
+import type { TypedUseSelectorHook } from 'react-redux'
+import type { RootState, AppDispatch } from '../store'
+
+export const useAppDispatch: () => AppDispatch = useDispatch
+export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector`
+      : `import { useDispatch, useSelector } from 'react-redux'
+
+export const useAppDispatch = useDispatch
+export const useAppSelector = useSelector`;
+
+    await fs.writeFile(path.join(featuresDir, `hooks.${ext}`), hooksContent);
   }
 
   private async initializeGit(targetPath: string): Promise<void> {

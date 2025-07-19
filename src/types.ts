@@ -19,6 +19,7 @@ export interface PostInstallConfig {
 export interface CreateProjectOptions {
   typescript?: boolean;
   tailwind?: boolean;
+  reduxToolkit?: boolean;
   auth?: boolean;
   prisma?: boolean;
   mongodb?: boolean;
