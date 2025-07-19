@@ -10,7 +10,7 @@ import { interactive } from './commands/interactive';
 const program = new Command();
 
 program
-  .name('get-template')
+  .name('rtg-template')
   .description('A CLI tool for quickly scaffolding full-stack project templates')
   .version(version);
 
@@ -19,6 +19,7 @@ program
   .argument('[project-name]', 'Name of the project to create')
   .option('-t, --typescript', 'Add TypeScript support')
   .option('--tailwind', 'Add Tailwind CSS')
+  .option('--redux-toolkit', 'Add Redux Toolkit')
   .option('--auth', 'Add authentication setup')
   .option('--prisma', 'Add Prisma ORM')
   .option('--mongodb', 'Add MongoDB support')

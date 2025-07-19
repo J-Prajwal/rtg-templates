@@ -1,10 +1,10 @@
 {
-  "name": "get-template",
+  "name": "rtg-template",
   "version": "1.0.0",
   "description": "A CLI tool for quickly scaffolding full-stack project templates",
   "main": "dist/index.js",
   "bin": {
-    "get-template": "./dist/cli.js"
+    "rtg-template": "./dist/cli.js"
   },
   "scripts": {
     "build": "tsc",

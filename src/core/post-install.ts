@@ -27,6 +27,9 @@ export class PostInstallRunner {
     if (postInstall.scripts) {
       await this.runCustomScripts();
     }
+
+    // Setup Husky if it's in the dependencies
+    await this.setupHusky();
   }
 
   private async installDependencies(): Promise<void> {
@@ -123,6 +126,38 @@ export class PostInstallRunner {
       } catch (error) {
         console.warn(`Warning: Failed to run script: ${script}`);
       }
+    }
+  }
+
+  private async setupHusky(): Promise<void> {
+    const { targetPath } = this.context;
+    
+    try {
+      // Check if husky is in package.json
+      const packageJsonPath = path.join(targetPath, 'package.json');
+      if (await fs.pathExists(packageJsonPath)) {
+        const packageJson = await fs.readJson(packageJsonPath);
+        const hasHusky = packageJson.devDependencies?.husky || packageJson.dependencies?.husky;
+        
+        if (hasHusky) {
+          // Initialize husky
+          execSync('npx husky install', {
+            cwd: targetPath,
+            stdio: 'inherit',
+          });
+          
+          // Add pre-commit hook for lint-staged
+          const hasLintStaged = packageJson.devDependencies?.['lint-staged'] || packageJson.dependencies?.['lint-staged'];
+          if (hasLintStaged) {
+            execSync('npx husky add .husky/pre-commit "npx lint-staged"', {
+              cwd: targetPath,
+              stdio: 'inherit',
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Warning: Failed to setup Husky');
     }
   }
 

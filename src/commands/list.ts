@@ -23,9 +23,9 @@ export async function listTemplates(): Promise<void> {
     });
 
     console.log(chalk.gray('Usage examples:'));
-    console.log(chalk.gray('  npx get-template react my-app --typescript --tailwind'));
-    console.log(chalk.gray('  npx get-template next my-next-app --auth'));
-    console.log(chalk.gray('  npx get-template node-api my-api --mongodb\n'));
+    console.log(chalk.gray('  npx rtg-template react my-app --typescript --tailwind'));
+    console.log(chalk.gray('  npx rtg-template next my-next-app --auth'));
+    console.log(chalk.gray('  npx rtg-template node-api my-api --mongodb\n'));
     
   } catch (error) {
     console.error(chalk.red('Failed to load templates:'), error instanceof Error ? error.message : error);
