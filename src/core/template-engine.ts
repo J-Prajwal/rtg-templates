@@ -163,6 +163,85 @@ export class TemplateEngine {
     return files.some(file => file.endsWith('.ts') || file.endsWith('.tsx'));
   }
 
+  private async convertToTypeScript(targetPath: string): Promise<void> {
+    const files = await this.getAllFiles(targetPath);
+    
+    for (const filePath of files) {
+      if (filePath.endsWith('.jsx')) {
+        const newPath = filePath.replace('.jsx', '.tsx');
+        await fs.move(filePath, newPath);
+        
+        // Update file content to TypeScript
+        let content = await fs.readFile(newPath, 'utf8');
+        content = this.convertJsxToTsx(content);
+        await fs.writeFile(newPath, content);
+      } else if (filePath.endsWith('.js') && !filePath.endsWith('.d.js')) {
+        const newPath = filePath.replace('.js', '.ts');
+        await fs.move(filePath, newPath);
+        
+        // Update file content to TypeScript
+        let content = await fs.readFile(newPath, 'utf8');
+        content = this.convertJsToTs(content);
+        await fs.writeFile(newPath, content);
+      }
+    }
+    
+    // Update HTML file to reference .tsx instead of .jsx
+    const htmlFiles = ['index.html'];
+    for (const htmlFile of htmlFiles) {
+      const htmlPath = path.join(targetPath, htmlFile);
+      if (await fs.pathExists(htmlPath)) {
+        let content = await fs.readFile(htmlPath, 'utf8');
+        content = content.replace(/\.jsx/g, '.tsx');
+        content = content.replace(/\.js/g, '.ts');
+        await fs.writeFile(htmlPath, content);
+      }
+    }
+  }
+
+  private convertJsxToTsx(content: string): string {
+    // Add React import if not present
+    if (!content.includes('import React') && !content.includes('import {') && content.includes('React')) {
+      content = 'import React from \'react\'\n\n' + content;
+    }
+    
+    // Add type annotations for function components
+    content = content.replace(
+      /function\s+(\w+)\s*\(/g,
+      'function $1(): React.JSX.Element ('
+    );
+    
+    // Fix the double parentheses issue
+    content = content.replace(
+      /function\s+(\w+)\s*\(\):\s*React\.JSX\.Element\s*\(\)/g,
+      'function $1(): React.JSX.Element'
+    );
+    
+    // Add type annotations for arrow function components
+    content = content.replace(
+      /const\s+(\w+)\s*=\s*\(/g,
+      'const $1: React.FC = ('
+    );
+    
+    // Update import statements to use .tsx extension
+    content = content.replace(/from\s+['"]\.\/.*\.jsx['"]/g, (match) => {
+      return match.replace('.jsx', '.tsx');
+    });
+    
+    // Update text references from .jsx to .tsx
+    content = content.replace(/src\/.*\.jsx/g, (match) => {
+      return match.replace('.jsx', '.tsx');
+    });
+    
+    return content;
+  }
+
+  private convertJsToTs(content: string): string {
+    // Add basic TypeScript annotations
+    // This is a simplified conversion - you might want to add more sophisticated logic
+    return content;
+  }
+
   private async handleConditionalFiles(targetPath: string, options: any): Promise<void> {
     // Check if template already has TypeScript files
     const hasTypeScriptFiles = await this.hasTypeScriptFiles(targetPath);
@@ -170,8 +249,12 @@ export class TemplateEngine {
     
     // Handle TypeScript configuration
     if (shouldUseTypeScript) {
+      // Convert JavaScript files to TypeScript if TypeScript is selected
+      if (options.typescript && !hasTypeScriptFiles) {
+        await this.convertToTypeScript(targetPath);
+      }
       // Ensure TypeScript files are preserved
-      // No conversion needed when TypeScript is selected
+      // No conversion needed when TypeScript is already in template
     } else {
       // Remove TypeScript config if TypeScript is not selected
       const tsConfigFiles = ['tsconfig.json', 'tsconfig.node.json'];
