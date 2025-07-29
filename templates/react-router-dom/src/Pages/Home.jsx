@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import './App.css';
+import React, { useState } from 'react'
+import '../App.css'
 
-function App() {
-  const [count, setCount] = useState(0);
+const HomePage = () => {
+  const [count, setCount] = useState(0)
 
   return (
     <div className="app">
       {/* Header */}
       <header className="header">
         <h1>Welcome to {{Project Name}}</h1>
-        <p>A modern React application</p>
+        <p>A modern React application with React Router DOM</p>
       </header>
 
       {/* Main Content */}
@@ -17,7 +17,7 @@ function App() {
         <section className="section">
           <h2>Getting Started</h2>
           <p>
-            This template includes React and Vite. Start building your amazing application!
+            This template includes React, Vite, and React Router DOM. Start building your amazing application!
           </p>
         </section>
 
@@ -46,10 +46,10 @@ function App() {
               </p>
             </div>
             <div className="feature-card" style={{ backgroundColor: '#f3e5f5' }}>
-              <div className="feature-icon">🎨</div>
-              <h4 className="feature-title">Modern React</h4>
+              <div className="feature-icon">🛣️</div>
+              <h4 className="feature-title">React Router DOM</h4>
               <p className="feature-description">
-                Latest React features with hooks and modern patterns
+                Declarative routing for React applications
               </p>
             </div>
             <div className="feature-card" style={{ backgroundColor: '#e8f5e8' }}>
@@ -65,10 +65,10 @@ function App() {
 
       {/* Footer */}
       <footer className="footer">
-        <p>Built with ❤️ using React</p>
+        <p>Built with ❤️ using React + React Router DOM</p>
       </footer>
     </div>
-  );
+  )
 }
 
-export default App; 
+export default HomePage

@@ -51,6 +51,14 @@ function App() {
                     +
                   </button>
                 </div>
+                <div className="text-center mt-4">
+                  <button
+                    onClick={() => setCount(0)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Reset
+                  </button>
+                </div>
               </div>
 
               {/* Feature Cards */}
