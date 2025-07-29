@@ -48,8 +48,8 @@ const HomePage = () => {
     <>
       {/* Header */}
       <header className="header">
-        <h1>Welcome to Test Router</h1>
-        <p>A modern React application with TypeScript</p>
+        <h1>Welcome to {{Project Name}}</h1>
+        <p>A modern React application with React Router DOM and TypeScript</p>
       </header>
 
       {/* Main Content */}
@@ -57,8 +57,7 @@ const HomePage = () => {
         <section className="section">
           <h2>Getting Started</h2>
           <p>
-            This template includes React, Vite, and TypeScript. Start building
-            your amazing application!
+            This template includes React, Vite, React Router DOM, and TypeScript. Start building your amazing application!
           </p>
         </section>
 
@@ -78,15 +77,15 @@ const HomePage = () => {
               bgColor="#e3f2fd"
             />
             <FeatureCard
-              icon="🔷"
-              title="TypeScript"
-              description="Type-safe development with enhanced IDE support"
+              icon="🛣️"
+              title="React Router DOM"
+              description="Declarative routing for React applications"
               bgColor="#f3e5f5"
             />
             <FeatureCard
-              icon="🔧"
-              title="Modern Tooling"
-              description="ESLint, Prettier, and Husky for code quality"
+              icon="🔷"
+              title="TypeScript"
+              description="Type-safe development with enhanced IDE support"
               bgColor="#e8f5e8"
             />
           </div>
@@ -95,7 +94,7 @@ const HomePage = () => {
 
       {/* Footer */}
       <footer className="footer">
-        <p>Built with ❤️ using React + TypeScript</p>
+        <p>Built with ❤️ using React + React Router DOM + TypeScript</p>
       </footer>
     </>
   )
