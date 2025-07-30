@@ -9,30 +9,40 @@ export class TemplateEngine {
   async cloneTemplate(context: TemplateContext): Promise<void> {
     const { targetPath } = context;
     
-    // Ensure target directory exists
     await fs.ensureDir(path.dirname(targetPath));
 
-    // Use custom repository if provided, otherwise use template config
     const repository = context.options.repo || this.config.repository;
     
     if (!repository) {
       throw new Error(`No repository specified for template "${this.config.name}"`);
     }
 
-    // Handle local templates
     if (repository.startsWith('local:')) {
       const localPath = repository.replace('local:', '');
-      const templatePath = path.resolve(process.cwd(), localPath);
       
-      if (!await fs.pathExists(templatePath)) {
-        throw new Error(`Local template not found: ${templatePath}`);
+      const possiblePaths = [
+        path.resolve(process.cwd(), localPath),
+        path.resolve(__dirname, '..', '..', localPath),
+        path.resolve(__dirname, '..', localPath),
+      ];
+      
+      let templatePath: string | null = null;
+      
+      for (const possiblePath of possiblePaths) {
+        if (await fs.pathExists(possiblePath)) {
+          templatePath = possiblePath;
+          break;
+        }
+      }
+      
+      if (!templatePath) {
+        throw new Error(`Template not found. Tried paths: ${possiblePaths.join(', ')}`);
       }
       
       await fs.copy(templatePath, targetPath);
       return;
     }
 
-    // Use degit to clone the template
     const emitter = degit(repository, {
       cache: false,
       force: true,
@@ -40,7 +50,6 @@ export class TemplateEngine {
 
     await emitter.clone(targetPath);
 
-    // If template has a specific directory within the repo, move files
     if (this.config.directory) {
       const sourcePath = path.join(targetPath, this.config.directory);
       const tempPath = path.join(targetPath, '..', `${path.basename(targetPath)}-temp`);
@@ -56,16 +65,12 @@ export class TemplateEngine {
   async processTemplate(context: TemplateContext): Promise<void> {
     const { targetPath, projectName, options } = context;
 
-    // Update package.json if it exists
     await this.updatePackageJson(targetPath, projectName, options);
 
-    // Process template variables in files
     await this.processTemplateFiles(targetPath, context);
 
-    // Handle conditional files based on options
     await this.handleConditionalFiles(targetPath, options);
 
-    // Initialize git if requested
     if (options.git !== false) {
       await this.initializeGit(targetPath);
     }
@@ -77,10 +82,8 @@ export class TemplateEngine {
     if (await fs.pathExists(packageJsonPath)) {
       const packageJson = await fs.readJson(packageJsonPath);
       
-      // Update name
       packageJson.name = projectName;
       
-      // Add dependencies based on options
       if (options.typescript) {
         packageJson.devDependencies = packageJson.devDependencies || {};
         packageJson.devDependencies.typescript = '^5.0.0';
@@ -143,14 +146,12 @@ export class TemplateEngine {
     try {
       let content = await fs.readFile(filePath, 'utf8');
       
-      // Replace template variables
       content = content.replace(/\{\{PROJECT_NAME\}\}/g, context.projectName);
       content = content.replace(/\{\{project-name\}\}/g, context.projectName.toLowerCase());
       content = content.replace(/\{\{Project Name\}\}/g, this.capitalizeWords(context.projectName));
       
       await fs.writeFile(filePath, content);
     } catch (error) {
-      // Skip binary files or files that can't be processed
     }
   }
 
@@ -171,7 +172,6 @@ export class TemplateEngine {
         const newPath = filePath.replace('.jsx', '.tsx');
         await fs.move(filePath, newPath);
         
-        // Update file content to TypeScript
         let content = await fs.readFile(newPath, 'utf8');
         content = this.convertJsxToTsx(content);
         await fs.writeFile(newPath, content);
@@ -179,14 +179,12 @@ export class TemplateEngine {
         const newPath = filePath.replace('.js', '.ts');
         await fs.move(filePath, newPath);
         
-        // Update file content to TypeScript
         let content = await fs.readFile(newPath, 'utf8');
         content = this.convertJsToTs(content);
         await fs.writeFile(newPath, content);
       }
     }
-    
-    // Update HTML file to reference .tsx instead of .jsx
+
     const htmlFiles = ['index.html'];
     for (const htmlFile of htmlFiles) {
       const htmlPath = path.join(targetPath, htmlFile);
