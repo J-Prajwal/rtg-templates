@@ -2,15 +2,107 @@ import { TemplateRegistry, TemplateConfig } from "../types";
 
 // Built-in template registry
 const BUILTIN_TEMPLATES: Record<string, TemplateConfig> = {
+  react: {
+    name: "react",
+    description: "React application with Vite",
+    repository: "local:templates/react-basic",
+    frameworks: ["React", "Vite"],
+    addons: [
+      "typescript",
+      "tailwind",
+      "styled-components",
+      "mui",
+      "chakra",
+      "redux-toolkit",
+      "router",
+    ],
+    postInstall: {
+      dependencies: ["react", "react-dom"],
+      devDependencies: ["@vitejs/plugin-react", "vite"],
+      instructions: "Run `npm run dev` to start the development server.",
+      linting: {
+        eslint: `module.exports = {
+  env: {
+    browser: true,
+    es2021: true,
+  },
+  extends: [
+    'eslint:recommended',
+    'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
+    'plugin:@typescript-eslint/recommended',
+    'prettier',
+  ],
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaFeatures: {
+      jsx: true,
+    },
+    ecmaVersion: 12,
+    sourceType: 'module',
+  },
+  plugins: ['react', '@typescript-eslint', 'prettier'],
+  rules: {
+    'prettier/prettier': 'error',
+    'react/react-in-jsx-scope': 'off',
+  },
+  settings: {
+    react: {
+      version: 'detect',
+    },
+  },
+}`,
+        prettier: `{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false
+}`,
+      },
+    },
+  },
+  "react-ts": {
+    name: "react-ts",
+    description: "React application with TypeScript and Vite",
+    repository: "local:templates/react-ts",
+    frameworks: ["React", "Vite", "TypeScript"],
+    addons: [
+      "tailwind",
+      "styled-components",
+      "mui",
+      "chakra",
+      "redux-toolkit",
+      "router",
+    ],
+    postInstall: {
+      dependencies: ["react", "react-dom"],
+      devDependencies: [
+        "@vitejs/plugin-react",
+        "vite",
+        "typescript",
+        "@types/react",
+        "@types/react-dom",
+      ],
+      instructions: "Run `npm run dev` to start the development server.",
+    },
+  },
   "react-tailwind": {
     name: "react-tailwind",
     description: "React application with Tailwind CSS",
     repository: "local:templates/react-tailwind",
     frameworks: ["React", "Vite", "Tailwind CSS"],
-    addons: ["typescript", "redux-toolkit"],
+    addons: ["typescript", "redux-toolkit", "router"],
     postInstall: {
       dependencies: ["react", "react-dom"],
-      devDependencies: ["@vitejs/plugin-react", "vite", "tailwindcss", "postcss", "autoprefixer"],
+      devDependencies: [
+        "@vitejs/plugin-react",
+        "vite",
+        "tailwindcss",
+        "postcss",
+        "autoprefixer",
+      ],
       instructions: "Run `npm run dev` to start the development server.",
     },
   },
@@ -19,10 +111,19 @@ const BUILTIN_TEMPLATES: Record<string, TemplateConfig> = {
     description: "React application with Tailwind CSS and TypeScript",
     repository: "local:templates/react-tailwind-ts",
     frameworks: ["React", "Vite", "Tailwind CSS", "TypeScript"],
-    addons: ["redux-toolkit"],
+    addons: ["redux-toolkit", "router"],
     postInstall: {
       dependencies: ["react", "react-dom"],
-      devDependencies: ["@vitejs/plugin-react", "vite", "tailwindcss", "postcss", "autoprefixer", "typescript", "@types/react", "@types/react-dom"],
+      devDependencies: [
+        "@vitejs/plugin-react",
+        "vite",
+        "tailwindcss",
+        "postcss",
+        "autoprefixer",
+        "typescript",
+        "@types/react",
+        "@types/react-dom",
+      ],
       instructions: "Run `npm run dev` to start the development server.",
     },
   },
@@ -31,9 +132,15 @@ const BUILTIN_TEMPLATES: Record<string, TemplateConfig> = {
     description: "React application with Material-UI",
     repository: "local:templates/react-material-ui",
     frameworks: ["React", "Vite", "Material-UI"],
-    addons: ["typescript", "redux-toolkit"],
+    addons: ["typescript", "redux-toolkit", "router"],
     postInstall: {
-      dependencies: ["react", "react-dom", "@mui/material", "@emotion/react", "@emotion/styled"],
+      dependencies: [
+        "react",
+        "react-dom",
+        "@mui/material",
+        "@emotion/react",
+        "@emotion/styled",
+      ],
       devDependencies: ["@vitejs/plugin-react", "vite"],
       instructions: "Run `npm run dev` to start the development server.",
     },
@@ -43,34 +150,10 @@ const BUILTIN_TEMPLATES: Record<string, TemplateConfig> = {
     description: "React application with Styled Components",
     repository: "local:templates/react-styled-components",
     frameworks: ["React", "Vite", "Styled Components"],
-    addons: ["typescript", "redux-toolkit"],
+    addons: ["typescript", "redux-toolkit", "router"],
     postInstall: {
       dependencies: ["react", "react-dom", "styled-components"],
       devDependencies: ["@vitejs/plugin-react", "vite"],
-      instructions: "Run `npm run dev` to start the development server.",
-    },
-  },
-  "react": {
-    name: "react",
-    description: "React application with Vite",
-    repository: "local:templates/react-basic",
-    frameworks: ["React", "Vite"],
-    addons: ["typescript", "tailwind", "redux-toolkit"],
-    postInstall: {
-      dependencies: ["react", "react-dom"],
-      devDependencies: ["@vitejs/plugin-react", "vite"],
-      instructions: "Run `npm run dev` to start the development server.",
-    },
-  },
-  "react-ts": {
-    name: "react-ts",
-    description: "React application with TypeScript and Vite",
-    repository: "local:templates/react-ts",
-    frameworks: ["React", "Vite", "TypeScript"],
-    addons: ["tailwind", "redux-toolkit"],
-    postInstall: {
-      dependencies: ["react", "react-dom"],
-      devDependencies: ["@vitejs/plugin-react", "vite", "typescript", "@types/react", "@types/react-dom"],
       instructions: "Run `npm run dev` to start the development server.",
     },
   },
@@ -79,7 +162,7 @@ const BUILTIN_TEMPLATES: Record<string, TemplateConfig> = {
     description: "React application with React Router DOM",
     repository: "local:templates/react-router-dom",
     frameworks: ["React", "Vite", "React Router DOM"],
-    addons: ["React Router DOM"],
+    addons: ["typescript", "router"],
     postInstall: {
       dependencies: ["react", "react-dom", "react-router-dom"],
       devDependencies: ["@vitejs/plugin-react", "vite"],
@@ -91,10 +174,16 @@ const BUILTIN_TEMPLATES: Record<string, TemplateConfig> = {
     description: "React application with React Router DOM and TypeScript",
     repository: "local:templates/react-router-dom-ts",
     frameworks: ["React", "Vite", "React Router DOM", "TypeScript"],
-    addons: ["React Router DOM", "TypeScript"],
+    addons: ["typescript", "router"],
     postInstall: {
       dependencies: ["react", "react-dom", "react-router-dom"],
-      devDependencies: ["@vitejs/plugin-react", "vite", "typescript", "@types/react", "@types/react-dom"],
+      devDependencies: [
+        "@vitejs/plugin-react",
+        "vite",
+        "typescript",
+        "@types/react",
+        "@types/react-dom",
+      ],
       instructions: "Run `npm run dev` to start the development server.",
     },
   },
