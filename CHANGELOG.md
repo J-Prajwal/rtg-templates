@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2024-01-XX
 
 ### Added
-- Initial release of get-template CLI tool
+- Initial release of rtg-template CLI tool
 - Support for React, Next.js, Node.js API, NestJS, and FastAPI templates
 - Interactive CLI mode with inquirer prompts
 - Command-line flags for customizing templates (--typescript, --tailwind, --auth, etc.)
@@ -24,9 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 - **CLI Commands:**
-  - `get-template <template> <project-name> [options]` - Create new project
-  - `get-template list` - List available templates
-  - `get-template interactive` - Run in interactive mode
+  - `rtg-template <template> <project-name> [options]` - Create new project
+  - `rtg-template list` - List available templates
+  - `rtg-template interactive` - Run in interactive mode
 
 - **Supported Templates:**
   - `react` - React with Vite

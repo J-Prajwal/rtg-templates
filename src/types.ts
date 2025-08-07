@@ -14,6 +14,10 @@ export interface PostInstallConfig {
   dependencies?: string[];
   devDependencies?: string[];
   instructions?: string;
+  linting?: {
+    eslint?: string;
+    prettier?: string;
+  };
 }
 
 export interface CreateProjectOptions {
@@ -30,6 +34,10 @@ export interface CreateProjectOptions {
   repo?: string;
   install?: boolean;
   git?: boolean;
+  styledComponents?: boolean;
+  mui?: boolean;
+  chakra?: boolean;
+  route?: boolean;
 }
 
 export interface TemplateRegistry {
@@ -42,7 +50,7 @@ export interface InteractiveAnswers {
   projectName: string;
   features: string[];
   database?: string;
-  packageManager: 'npm' | 'yarn' | 'pnpm';
+  packageManager: "npm" | "yarn" | "pnpm";
   initGit: boolean;
 }
 
@@ -51,4 +59,4 @@ export interface TemplateContext {
   options: CreateProjectOptions;
   targetPath: string;
   templatePath?: string;
-} 
+}
