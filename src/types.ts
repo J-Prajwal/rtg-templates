@@ -17,8 +17,24 @@ export interface PostInstallConfig {
 }
 
 export interface CreateProjectOptions {
+  // Base template options
   typescript?: boolean;
+  
+  // UI/CSS add-ons
   tailwind?: boolean;
+  styledComponents?: boolean;
+  mui?: boolean;
+  chakra?: boolean;
+  
+  // State management add-ons
+  redux?: boolean;
+  tanstackQuery?: boolean;
+  
+  // Routing
+  route?: boolean; // true by default, false when --no-route is used
+  noRoute?: boolean; // legacy property
+  
+  // Legacy options (for backward compatibility)
   reduxToolkit?: boolean;
   auth?: boolean;
   prisma?: boolean;
@@ -41,7 +57,8 @@ export interface InteractiveAnswers {
   template: string;
   projectName: string;
   features: string[];
-  database?: string;
+  stateManagement: string[];
+  includeRouter: boolean;
   packageManager: 'npm' | 'yarn' | 'pnpm';
   initGit: boolean;
 }
@@ -51,4 +68,13 @@ export interface TemplateContext {
   options: CreateProjectOptions;
   targetPath: string;
   templatePath?: string;
+}
+
+export interface AddonConfig {
+  name: string;
+  dependencies?: string[];
+  devDependencies?: string[];
+  scripts?: Record<string, string>;
+  files?: Record<string, string>;
+  instructions?: string;
 } 

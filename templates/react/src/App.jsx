@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-import Home from './Pages/Home.tsx'
+import Home from './Pages/Home.jsx'
 import './App.css'
 
 function App() {
@@ -12,4 +12,4 @@ function App() {
   )
 }
 
-export default App 
+export default App
