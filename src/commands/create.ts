@@ -5,7 +5,7 @@ import { existsSync } from 'fs';
 import { CreateProjectOptions, TemplateContext } from '../types';
 import { TemplateEngine } from '../core/template-engine';
 import { PostInstallRunner } from '../core/post-install';
-import { validateProjectName, validateTemplate } from '../utils/validation';
+import { validateProjectName, validateTemplate, validateOptions } from '../utils/validation';
 import { getTemplateRegistry } from '../core/registry';
 
 export async function createProject(
@@ -31,6 +31,10 @@ export async function createProject(
     spinner.start('Loading template registry...');
     const registry = await getTemplateRegistry();
     const templateConfig = validateTemplate(template, registry);
+    
+    // Validate options
+    validateOptions(templateConfig, options);
+    
     spinner.succeed('Template registry loaded');
 
     // Prepare context

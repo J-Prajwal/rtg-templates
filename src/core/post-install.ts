@@ -13,6 +13,11 @@ export class PostInstallRunner {
     const { postInstall } = this.config;
     if (!postInstall) return;
 
+    // Handle --no-route flag before installing dependencies
+    if (this.context.options.route === false) {
+      await this.removeReactRouter();
+    }
+
     // Install dependencies
     if (postInstall.dependencies || postInstall.devDependencies) {
       await this.installDependencies();
@@ -32,8 +37,113 @@ export class PostInstallRunner {
     await this.setupHusky();
   }
 
-  private async installDependencies(): Promise<void> {
+  private async removeReactRouter(): Promise<void> {
     const { targetPath } = this.context;
+    
+    // Remove react-router-dom from package.json
+    const packageJsonPath = path.join(targetPath, 'package.json');
+    if (await fs.pathExists(packageJsonPath)) {
+      const packageJson = await fs.readJson(packageJsonPath);
+      
+      if (packageJson.dependencies && packageJson.dependencies['react-router-dom']) {
+        delete packageJson.dependencies['react-router-dom'];
+      }
+      
+      await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+    }
+
+    // Update main.jsx to remove router imports and wrapper
+    const mainJsxPath = path.join(targetPath, 'src/main.jsx');
+    if (await fs.pathExists(mainJsxPath)) {
+      let content = await fs.readFile(mainJsxPath, 'utf8');
+      
+      // Remove react-router-dom import
+      content = content.replace(/import.*react-router-dom.*\n?/g, '');
+      content = content.replace(/import.*BrowserRouter.*\n?/g, '');
+      
+      // Remove BrowserRouter wrapper
+      content = content.replace(/<BrowserRouter[^>]*>/, '');
+      content = content.replace(/<\/BrowserRouter>/, '');
+      
+      // Clean up empty import lines and extra whitespace
+      content = content.replace(/^\s*import\s*;\s*$/gm, '');
+      content = content.replace(/\n\s*\n\s*\n/g, '\n\n');
+      
+      await fs.writeFile(mainJsxPath, content);
+    }
+
+    // Update main.tsx for TypeScript template
+    const mainTsxPath = path.join(targetPath, 'src/main.tsx');
+    if (await fs.pathExists(mainTsxPath)) {
+      let content = await fs.readFile(mainTsxPath, 'utf8');
+      
+      // Remove react-router-dom import
+      content = content.replace(/import.*react-router-dom.*\n?/g, '');
+      content = content.replace(/import.*BrowserRouter.*\n?/g, '');
+      
+      // Remove BrowserRouter wrapper
+      content = content.replace(/<BrowserRouter[^>]*>/, '');
+      content = content.replace(/<\/BrowserRouter>/, '');
+      
+      // Clean up empty import lines and extra whitespace
+      content = content.replace(/^\s*import\s*;\s*$/gm, '');
+      content = content.replace(/\n\s*\n\s*\n/g, '\n\n');
+      
+      await fs.writeFile(mainTsxPath, content);
+    }
+
+    // Update App.jsx to remove Routes and Route
+    const appJsxPath = path.join(targetPath, 'src/App.jsx');
+    if (await fs.pathExists(appJsxPath)) {
+      let content = await fs.readFile(appJsxPath, 'utf8');
+      
+      // Remove react-router-dom imports
+      content = content.replace(/import.*react-router-dom.*\n?/g, '');
+      content = content.replace(/import.*Routes.*\n?/g, '');
+      content = content.replace(/import.*Route.*\n?/g, '');
+      
+      // Remove Routes and Route components, replace with direct Home component
+      content = content.replace(/<Routes>[\s\S]*?<\/Routes>/g, '<Home />');
+      
+      // Clean up empty import lines and extra whitespace
+      content = content.replace(/^\s*import\s*;\s*$/gm, '');
+      content = content.replace(/\n\s*\n\s*\n/g, '\n\n');
+      
+      await fs.writeFile(appJsxPath, content);
+    }
+
+    // Update App.tsx for TypeScript template
+    const appTsxPath = path.join(targetPath, 'src/App.tsx');
+    if (await fs.pathExists(appTsxPath)) {
+      let content = await fs.readFile(appTsxPath, 'utf8');
+      
+      // Remove react-router-dom imports
+      content = content.replace(/import.*react-router-dom.*\n?/g, '');
+      content = content.replace(/import.*Routes.*\n?/g, '');
+      content = content.replace(/import.*Route.*\n?/g, '');
+      
+      // Remove Routes and Route components, replace with direct Home component
+      content = content.replace(/<Routes>[\s\S]*?<\/Routes>/g, '<Home />');
+      
+      // Clean up empty import lines and extra whitespace
+      content = content.replace(/^\s*import\s*;\s*$/gm, '');
+      content = content.replace(/\n\s*\n\s*\n/g, '\n\n');
+      
+      await fs.writeFile(appTsxPath, content);
+    }
+
+    // Remove router directories
+    const routerDirs = ['src/Routes', 'src/routes', 'src/components/Router'];
+    for (const dir of routerDirs) {
+      const dirPath = path.join(targetPath, dir);
+      if (await fs.pathExists(dirPath)) {
+        await fs.remove(dirPath);
+      }
+    }
+  }
+
+  private async installDependencies(): Promise<void> {
+    const { targetPath, options } = this.context;
     const { postInstall } = this.config;
 
     if (!postInstall) return;
@@ -41,7 +151,13 @@ export class PostInstallRunner {
     try {
       // Install production dependencies
       if (postInstall.dependencies && postInstall.dependencies.length > 0) {
-        const depsToInstall = this.filterExistingDependencies(postInstall.dependencies);
+        let depsToInstall = this.filterExistingDependencies(postInstall.dependencies);
+        
+        // Filter out react-router-dom if --no-route is specified
+        if (options.route === false) {
+          depsToInstall = depsToInstall.filter(dep => !dep.includes('react-router-dom'));
+        }
+        
         if (depsToInstall.length > 0) {
           execSync(`npm install ${depsToInstall.join(' ')}`, {
             cwd: targetPath,

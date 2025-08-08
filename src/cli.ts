@@ -11,20 +11,19 @@ const program = new Command();
 
 program
   .name('rtg-template')
-  .description('A CLI tool for quickly scaffolding full-stack project templates')
+  .description('A CLI tool for quickly scaffolding React project templates with add-ons')
   .version(version);
 
 program
-  .argument('[template]', 'Template name to use (e.g., react, next, node-api)')
+  .argument('<template>', 'Template name: react or react-ts')
   .argument('[project-name]', 'Name of the project to create')
-  .option('-t, --typescript', 'Add TypeScript support')
   .option('--tailwind', 'Add Tailwind CSS')
-  .option('--redux-toolkit', 'Add Redux Toolkit')
-  .option('--auth', 'Add authentication setup')
-  .option('--prisma', 'Add Prisma ORM')
-  .option('--mongodb', 'Add MongoDB support')
-  .option('--mysql', 'Add MySQL support')
-  .option('--postgres', 'Add PostgreSQL support')
+  .option('--styled-components', 'Add Styled Components')
+  .option('--mui', 'Add Material-UI (MUI)')
+  .option('--chakra', 'Add Chakra UI')
+  .option('--redux', 'Add Redux Toolkit')
+  .option('--tanstack-query', 'Add TanStack Query (React Query)')
+  .option('--no-route', 'Skip React Router installation')
   .option('-i, --interactive', 'Run in interactive mode')
   .option('-d, --directory <dir>', 'Output directory', '.')
   .option('--repo <repository>', 'Custom template repository')
