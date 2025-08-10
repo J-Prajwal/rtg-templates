@@ -76,5 +76,6 @@ export interface AddonConfig {
   devDependencies?: string[];
   scripts?: Record<string, string>;
   files?: Record<string, string>;
+  viteConfigModifier?: (content: string) => string;
   instructions?: string;
 } 

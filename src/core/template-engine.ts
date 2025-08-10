@@ -66,14 +66,15 @@ export class TemplateEngine {
   async processTemplate(context: TemplateContext): Promise<void> {
     const { targetPath, projectName, options } = context;
 
-    await this.updatePackageJson(targetPath, projectName, options);
-
     await this.processTemplateFiles(targetPath, context);
 
     await this.handleConditionalFiles(targetPath, options);
 
-    // Process add-ons
+    // Process add-ons first
     await this.processAddons(targetPath, options);
+
+    // Update package.json after addons are processed
+    await this.updatePackageJson(targetPath, projectName, options);
 
     // Initialize git if requested
     if (options.git !== false) {
@@ -162,6 +163,11 @@ export class TemplateEngine {
     if (addonConfig.scripts) {
       await this.addAddonScripts(targetPath, addonConfig.scripts);
     }
+    
+    // Modify vite config if needed
+    if (addonConfig.viteConfigModifier) {
+      await this.modifyViteConfig(targetPath, addonConfig.viteConfigModifier);
+    }
   }
 
   private async addAddonDependencies(targetPath: string, addonConfig: any): Promise<void> {
@@ -175,8 +181,20 @@ export class TemplateEngine {
         packageJson.dependencies = {
           ...packageJson.dependencies,
           ...addonConfig.dependencies.reduce((acc: any, dep: string) => {
-            const [name, version] = dep.includes('@') ? [dep, 'latest'] : [dep, 'latest'];
-            acc[name] = version;
+            const parts = dep.split('@');
+            if (parts.length === 1) {
+              // No version specified, use latest
+              acc[dep] = 'latest';
+            } else if (parts.length === 2 && !parts[0]) {
+              // Scoped package without version: @scope/package
+              acc[dep] = 'latest';
+            } else if (parts.length === 2 && parts[0]) {
+              // Regular package with version: package@version
+              acc[parts[0]] = parts[1];
+            } else if (parts.length === 3 && !parts[0]) {
+              // Scoped package with version: @scope/package@version
+              acc[`@${parts[1]}`] = parts[2];
+            }
             return acc;
           }, {})
         };
@@ -187,8 +205,20 @@ export class TemplateEngine {
         packageJson.devDependencies = {
           ...packageJson.devDependencies,
           ...addonConfig.devDependencies.reduce((acc: any, dep: string) => {
-            const [name, version] = dep.includes('@') ? [dep, 'latest'] : [dep, 'latest'];
-            acc[name] = version;
+            const parts = dep.split('@');
+            if (parts.length === 1) {
+              // No version specified, use latest
+              acc[dep] = 'latest';
+            } else if (parts.length === 2 && !parts[0]) {
+              // Scoped package without version: @scope/package
+              acc[dep] = 'latest';
+            } else if (parts.length === 2 && parts[0]) {
+              // Regular package with version: package@version
+              acc[parts[0]] = parts[1];
+            } else if (parts.length === 3 && !parts[0]) {
+              // Scoped package with version: @scope/package@version
+              acc[`@${parts[1]}`] = parts[2];
+            }
             return acc;
           }, {})
         };
@@ -210,6 +240,25 @@ export class TemplateEngine {
       };
       
       await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+    }
+  }
+
+  private async modifyViteConfig(targetPath: string, modifier: (content: string) => string): Promise<void> {
+    // Try to find vite config file
+    const possibleConfigFiles = [
+      'vite.config.js',
+      'vite.config.ts',
+      'vite.config.mjs'
+    ];
+    
+    for (const configFile of possibleConfigFiles) {
+      const configPath = path.join(targetPath, configFile);
+      if (await fs.pathExists(configPath)) {
+        const content = await fs.readFile(configPath, 'utf8');
+        const modifiedContent = modifier(content);
+        await fs.writeFile(configPath, modifiedContent);
+        return;
+      }
     }
   }
 

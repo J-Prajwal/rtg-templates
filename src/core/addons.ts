@@ -5,37 +5,52 @@ export const ADDONS: Record<string, AddonConfig> = {
     name: 'tailwind',
     dependencies: [],
     devDependencies: [
-      'tailwindcss',
-      'postcss',
-      'autoprefixer',
-      '@tailwindcss/postcss'
+      'tailwindcss@^4.1.11',
+      '@tailwindcss/vite@^4.1.11'
     ],
-    scripts: {
-      'build:css': 'tailwindcss -i ./src/index.css -o ./dist/output.css --watch'
-    },
     files: {
-      'tailwind.config.js': `/** @type {import('tailwindcss').Config} */
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-}`,
-      'postcss.config.js': `export default {
-  plugins: {
-    '@tailwindcss/postcss': {},
-    autoprefixer: {},
-  },
-}`,
-      'src/index.css': `@tailwind base;
-@tailwind components;
-@tailwind utilities;`
+      'src/index.css': `@import "tailwindcss";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}`
     },
-    instructions: 'Tailwind CSS has been configured. Make sure to import the CSS file in your main component.'
+    viteConfigModifier: (content: string) => {
+      // Add tailwindcss import
+      if (content.includes("import react from '@vitejs/plugin-react'")) {
+        content = content.replace(
+          "import react from '@vitejs/plugin-react'",
+          "import react from '@vitejs/plugin-react'\nimport tailwindcss from '@tailwindcss/vite'"
+        );
+      }
+      
+      // Add tailwindcss to plugins array
+      if (content.includes('plugins: [react()]')) {
+        content = content.replace(
+          'plugins: [react()]',
+          'plugins: [\n    react(),\n    tailwindcss(),\n  ]'
+        );
+      }
+      
+      return content;
+    },
+    instructions: 'Tailwind CSS has been configured with the latest Vite integration. You can now use Tailwind classes in your components.'
   },
 
   styledComponents: {
