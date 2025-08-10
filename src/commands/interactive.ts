@@ -3,16 +3,23 @@ import chalk from 'chalk';
 import { InteractiveAnswers, CreateProjectOptions } from '../types';
 import { createProject } from './create';
 import { getTemplateRegistry } from '../core/registry';
+import { getAllAddonNames } from '../core/addons';
 
 export async function interactive(): Promise<void> {
   try {
-    console.log(chalk.bold.cyan('\n🚀 Welcome to Get Template Interactive Mode!\n'));
+    console.log(chalk.bold.cyan('\n🚀 Welcome to RTG Template Interactive Mode!\n'));
     
     // Load available templates
     const registry = await getTemplateRegistry();
     const templateChoices = Object.entries(registry.templates).map(([name, config]) => ({
       name: `${name} - ${config.description}`,
       value: name,
+    }));
+
+    const allAddons = getAllAddonNames();
+    const addonChoices = allAddons.map(addon => ({
+      name: addon.charAt(0).toUpperCase() + addon.slice(1).replace(/([A-Z])/g, ' $1'),
+      value: addon,
     }));
 
     const answers: InteractiveAnswers = await inquirer.prompt([
@@ -39,30 +46,34 @@ export async function interactive(): Promise<void> {
       {
         type: 'checkbox',
         name: 'features',
-        message: 'Select additional features:',
+        message: 'Select UI/CSS add-ons (choose one):',
         choices: [
-          { name: 'TypeScript', value: 'typescript' },
           { name: 'Tailwind CSS', value: 'tailwind' },
-          { name: 'Authentication', value: 'auth' },
-          { name: 'Prisma ORM', value: 'prisma' },
+          { name: 'Styled Components', value: 'styled-components' },
+          { name: 'Material-UI (MUI)', value: 'mui' },
+          { name: 'Chakra UI', value: 'chakra' },
+        ],
+        validate: (input: string[]) => {
+          if (input.length > 1) {
+            return 'You can only select one UI library at a time';
+          }
+          return true;
+        },
+      },
+      {
+        type: 'checkbox',
+        name: 'stateManagement',
+        message: 'Select state management add-ons:',
+        choices: [
+          { name: 'Redux Toolkit', value: 'redux' },
+          { name: 'TanStack Query', value: 'tanstack-query' },
         ],
       },
       {
-        type: 'list',
-        name: 'database',
-        message: 'Select a database (if applicable):',
-        choices: [
-          { name: 'None', value: null },
-          { name: 'MongoDB', value: 'mongodb' },
-          { name: 'PostgreSQL', value: 'postgres' },
-          { name: 'MySQL', value: 'mysql' },
-        ],
-        when: (answers) => {
-          const template = registry.templates[answers.template];
-          return template.addons.some(addon => 
-            ['mongodb', 'mysql', 'postgres', 'prisma'].includes(addon)
-          );
-        },
+        type: 'confirm',
+        name: 'includeRouter',
+        message: 'Include React Router?',
+        default: true,
       },
       {
         type: 'list',
@@ -85,27 +96,15 @@ export async function interactive(): Promise<void> {
 
     // Convert answers to options
     const options: CreateProjectOptions = {
-      typescript: answers.features.includes('typescript'),
       tailwind: answers.features.includes('tailwind'),
-      auth: answers.features.includes('auth'),
-      prisma: answers.features.includes('prisma'),
+      styledComponents: answers.features.includes('styled-components'),
+      mui: answers.features.includes('mui'),
+      chakra: answers.features.includes('chakra'),
+      redux: answers.stateManagement.includes('redux'),
+      tanstackQuery: answers.stateManagement.includes('tanstack-query'),
+      noRoute: !answers.includeRouter,
       git: answers.initGit,
     };
-
-    // Set database option
-    if (answers.database) {
-      switch (answers.database) {
-        case 'mongodb':
-          options.mongodb = true;
-          break;
-        case 'postgres':
-          options.postgres = true;
-          break;
-        case 'mysql':
-          options.mysql = true;
-          break;
-      }
-    }
 
     console.log(chalk.yellow('\n📦 Creating your project...\n'));
 

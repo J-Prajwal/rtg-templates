@@ -1,4 +1,4 @@
-import { TemplateRegistry, TemplateConfig } from '../types';
+import { TemplateRegistry, TemplateConfig, CreateProjectOptions } from '../types';
 
 export function validateProjectName(name: string): void {
   if (!name) {
@@ -61,29 +61,34 @@ export function validateTemplate(templateName: string, registry: TemplateRegistr
     throw new Error('Template name is required');
   }
 
+  // Only allow react and react-ts templates
+  if (!['react', 'react-ts'].includes(templateName)) {
+    throw new Error(
+      `Template "${templateName}" not found. Available templates: react, react-ts`
+    );
+  }
+
   const template = registry.templates[templateName];
   
   if (!template) {
-    const availableTemplates = Object.keys(registry.templates).join(', ');
     throw new Error(
-      `Template "${templateName}" not found. Available templates: ${availableTemplates}`
+      `Template "${templateName}" not found. Available templates: react, react-ts`
     );
   }
 
   return template;
 }
 
-export function validateOptions(template: TemplateConfig, options: any): void {
+export function validateOptions(template: TemplateConfig, options: CreateProjectOptions): void {
   // Check if requested addons are supported by the template
   const requestedAddons = [];
   
-  if (options.typescript) requestedAddons.push('typescript');
   if (options.tailwind) requestedAddons.push('tailwind');
-  if (options.auth) requestedAddons.push('auth');
-  if (options.prisma) requestedAddons.push('prisma');
-  if (options.mongodb) requestedAddons.push('mongodb');
-  if (options.mysql) requestedAddons.push('mysql');
-  if (options.postgres) requestedAddons.push('postgres');
+  if (options.styledComponents) requestedAddons.push('styled-components');
+  if (options.mui) requestedAddons.push('mui');
+  if (options.chakra) requestedAddons.push('chakra');
+  if (options.redux) requestedAddons.push('redux');
+  if (options.tanstackQuery) requestedAddons.push('tanstack-query');
 
   const unsupportedAddons = requestedAddons.filter(addon => 
     !template.addons.includes(addon)
@@ -96,10 +101,10 @@ export function validateOptions(template: TemplateConfig, options: any): void {
     );
   }
 
-  // Check for conflicting database options
-  const databaseOptions = [options.mongodb, options.mysql, options.postgres].filter(Boolean);
-  if (databaseOptions.length > 1) {
-    throw new Error('You can only select one database option');
+  // Check for conflicting UI library options (only one should be selected)
+  const uiLibraries = [options.tailwind, options.styledComponents, options.mui, options.chakra].filter(Boolean);
+  if (uiLibraries.length > 1) {
+    throw new Error('You can only select one UI library at a time (tailwind, styled-components, mui, or chakra)');
   }
 }
 
