@@ -1,5 +1,5 @@
 import React from 'react'
-import { HeroLight } from '../components/Hero'
+import { HeroLight } from '@components/Hero'
 
 function Home() {
   return <HeroLight />
