@@ -1,13 +1,8 @@
 import React from 'react'
+import { HeroLight } from '../components/Hero'
 
 function Home() {
-  return (
-    <div className="home">
-      <h1>Welcome to {{Project Name}}</h1>
-      <p>This is a React application created with RTG Template.</p>
-      <p>Start building your app by editing the files in the src directory.</p>
-    </div>
-  )
+  return <HeroLight />
 }
 
 export default Home
