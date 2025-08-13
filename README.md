@@ -211,6 +211,7 @@ For deeper internals, see `COMPREHENSIVE_DOCUMENTATION.md` and `DEVELOPMENT.md`.
 ## Support 💬
 
 - 🐛 Issues: [GitHub Issues](https://github.com/J-Prajwal/rtg-templates/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/J-Prajwal/rtg-templates/discussions)
 
 Made with ❤️ by the RTG Template team
 
