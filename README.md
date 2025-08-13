@@ -52,6 +52,7 @@ npx rtg-template --interactive
 ## Features
 
 - React + Vite starter templates (JS and TS)
+- Production-ready templates, power-packed with Axios, Husky, ESLint, and Prettier
 - Optional React Router (disable with `--no-route`)
 - Pluggable add‑ons that modify code, deps, and Vite config when needed
 - Automated post‑install: deps installation, Husky setup, lint‑staged hook
@@ -204,6 +205,14 @@ Contributions are welcome! If you have ideas for new templates, add‑ons, or im
 6. Open a PR 🎉
 
 For deeper internals, see `COMPREHENSIVE_DOCUMENTATION.md` and `DEVELOPMENT.md`.
+
+---
+
+## Support 💬
+
+- 🐛 Issues: [GitHub Issues](https://github.com/J-Prajwal/rtg-templates/issues)
+
+Made with ❤️ by the RTG Template team
 
 ---
 
