@@ -305,6 +305,12 @@ export class TemplateEngine {
       content = content.replace(/\{\{project-name\}\}/g, context.projectName.toLowerCase());
       content = content.replace(/\{\{Project Name\}\}/g, this.capitalizeWords(context.projectName));
       
+      // Handle RTG_LIBRARIES replacement
+      if (content.includes('{{RTG_LIBRARIES}}')) {
+        const libraries = this.generateLibrariesArray(context);
+        content = content.replace(/\{\{RTG_LIBRARIES\}\}/g, libraries);
+      }
+      
       await fs.writeFile(filePath, content);
     } catch (error) {
     }
@@ -312,6 +318,37 @@ export class TemplateEngine {
 
   private capitalizeWords(str: string): string {
     return str.replace(/\b\w/g, l => l.toUpperCase()).replace(/[-_]/g, ' ');
+  }
+
+  private generateLibrariesArray(context: TemplateContext): string {
+    const { options } = context;
+    const libraries: string[] = [];
+    
+    // Add TypeScript if it's the TypeScript template
+    if (this.config.name === 'react-ts' || this.config.frameworks.includes('TypeScript')) {
+      libraries.push('typescript');
+    }
+    
+    // Add React Router if not disabled
+    if (options.noRoute !== true && options.route !== false) {
+      libraries.push('react-router-dom');
+    }
+    
+    // Add selected addons (only meaningful external libraries)
+    if (options.tailwind) libraries.push('tailwindcss');
+    if (options.styledComponents) libraries.push('styled-components');
+    if (options.mui) libraries.push('@mui/material');
+    if (options.chakra) libraries.push('@chakra-ui/react');
+    if (options.redux) libraries.push('@reduxjs/toolkit');
+    if (options.tanstackQuery) libraries.push('@tanstack/react-query');
+    
+    // Handle empty state - show a fallback message when no additional libraries
+    if (libraries.length === 0) {
+      libraries.push('base react setup');
+    }
+    
+    // Convert to quoted string array format
+    return libraries.map(lib => `"${lib}"`).join(', ');
   }
 
   private async handleConditionalFiles(targetPath: string, options: CreateProjectOptions): Promise<void> {
